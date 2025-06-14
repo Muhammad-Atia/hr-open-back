@@ -72,9 +72,15 @@ export type EmployeeType = {
   note: string;
   status: EEmployeeStatus;
   role: ERole;
+  employeeLanguage: {
+    language: "ar" | "en";
+    rtl: boolean;
+  };
 };
 
 export type EmployeeCreateType = {
+  name: string;
+  work_email: string;
   personal_email: string;
   department: EDepartment;
   job_type: EJobType;
@@ -82,6 +88,7 @@ export type EmployeeCreateType = {
   joining_date: Date;
   designation: string;
   manager_id: string;
+  password: string;
 };
 
 export type EmployeeFilterOptions = {

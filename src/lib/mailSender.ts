@@ -153,7 +153,8 @@ const salarySheet = async (
       bonus_amount
     ),
   };
-  await mailTransporter.sendMail(mailDetails);
+  console.log(mailDetails);
+  // await mailTransporter.sendMail(mailDetails);
 };
 
 export const mailSender = {

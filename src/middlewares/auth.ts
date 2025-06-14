@@ -1,33 +1,41 @@
+import { Request, Response, NextFunction, RequestHandler } from "express";
 import config from "@/config/variables";
-import ApiError from "@/errors/ApiError";
 import { jwtHelpers } from "@/lib/jwtTokenHelper";
-import { NextFunction, Request, Response } from "express";
 import { Secret } from "jsonwebtoken";
 
 const auth =
-  (...requestRoles: string[]) =>
-  async (req: Request, res: Response, next: NextFunction) => {
+  (...requestRoles) =>
+  async (req, res, next) => {
     try {
-      const token = req.headers.authorization as string;
+      console.log("==> AUTH MIDDLEWARE REACHED <==");
+      const token = req.headers.authorization;
       if (!token) {
-        throw new ApiError("User is not Authenticated", 401);
+        res.status(401).json({ message: "User is not authenticated" });
+        return;
       }
-      const verifyToken = `${token.split(" ")[1]}`;
+      const verifyToken = token.split(" ")[1];
       const verifiedToken = jwtHelpers.verifyToken(
         verifyToken,
-        config.jwt_secret as Secret
+        config.jwt_secret! as Secret
       );
       req.user = verifiedToken;
+
+      console.log("Allowed roles:", requestRoles);
+      console.log("User role:", verifiedToken.role);
+
       if (
-        requestRoles?.length &&
-        !requestRoles?.includes(verifiedToken?.role)
+        requestRoles.length > 0 &&
+        !requestRoles.includes(verifiedToken.role)
       ) {
-        throw new ApiError("User is not Authenticated", 401);
+        res.status(403).json({ message: "Forbidden: Insufficient role" });
+        return; // <== هذا السطر هو الأهم!
       }
+
       next();
     } catch (error) {
-      next(error);
+      res.status(401).json({ message: "Invalid or expired token" });
     }
   };
 
 export default auth;
+// This middleware checks if the user is authenticated and has the required roles.

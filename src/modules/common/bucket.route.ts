@@ -21,12 +21,14 @@ const bucketRouter = express.Router();
 // s3 config
 const s3Config: S3ClientConfig = {
   region: config.dos_region as string,
-  endpoint: `https://${config.dos_region}.digitaloceanspaces.com`,
+  endpoint: config.dos_end_point as string,
+  requestChecksumCalculation: "WHEN_REQUIRED",
   credentials: {
     accessKeyId: config.dos_public_access_key as string,
     secretAccessKey: config.dos_public_secret_key as string,
   },
 };
+
 const s3 = new S3Client(s3Config);
 
 // public upload file to s3
@@ -34,14 +36,14 @@ const uploadFile = multer({
   storage: multerS3({
     s3: s3,
     bucket: config.dos_bucket_name as string,
-    acl: function (req, file, cb) {
-      const permission = req.body.permission;
-      if (permission === "public-read" || permission === "private") {
-        cb(null, permission);
-      } else {
-        cb(new Error("Invalid ACL type specified"));
-      }
-    },
+    // acl: function (req, file, cb) {
+    //   const permission = req.body.permission;
+    //   if (permission === "public-read" || permission === "private") {
+    //     cb(null, permission);
+    //   } else {
+    //     cb(new Error("Invalid ACL type specified"));
+    //   }
+    // },
     key: function (req, file, cb) {
       const folder = req.body.folder;
       if (!folder) {
@@ -62,6 +64,8 @@ bucketRouter.post(
 
     uploadSingle(req, res, (err: any) => {
       if (err) {
+        console.log(err);
+
         return next(err);
       }
       return sendResponse(res, {

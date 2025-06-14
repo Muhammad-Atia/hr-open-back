@@ -37,6 +37,47 @@ const getAllEmployeeController = catchAsync(
 // get all employees id
 const getAllEmployeeBasicsController = catchAsync(
   async (req: Request, res: Response) => {
+    const { id } = req.params;
+    // const user = req.user;
+    // console.log(
+    //   "User is trying to access another employee's data:",
+    //   user?.id,
+    //   id
+    // );
+    // if (user?.id == undefined) {
+    //   sendResponse(res, {
+    //     success: false,
+    //     message: "undefined id",
+    //     statusCode: 400,
+    //   });
+    //   console.error("Error: id is undefined");
+    //   return;
+    // }
+    // if (user?.role === "user" && user.id !== id) {
+    //   // جلب كل الموظفين (id وname فقط)
+    //   const employees = await employeeService.getAllEmployeeBasicsService();
+    //   const basicEmployeeName = employees.map((emp) => ({
+    //     id: emp.id,
+    //     name: emp.name,
+    //   }));
+
+    //   // جلب بيانات المستخدم نفسه كاملة
+    //   const myFullData = await employeeService.getSingleEmployeeService(
+    //     user.id
+    //   );
+
+    //   sendResponse(res, {
+    //     success: true,
+    //     statusCode: 200,
+    //     result: {
+    //       me: myFullData, // بيانات المستخدم نفسه كاملة
+    //       employees: basicEmployeeName, // أسماء باقي الموظفين (id وname فقط)
+    //     },
+    //     message: "data get successfully",
+    //   });
+    //   return;
+    // }
+
     const employee = await employeeService.getAllEmployeeBasicsService();
     sendResponse(res, {
       success: true,
@@ -49,10 +90,20 @@ const getAllEmployeeBasicsController = catchAsync(
 
 // get single employee
 const getSingleEmployeeController = catchAsync(
-  async (req: Request, res: Response) => {
-    const employee = await employeeService.getSingleEmployeeService(
-      req.params.id
-    );
+  async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const user = req.user;
+
+    if (user?.role === "user" && user.id !== id) {
+      res.status(403).json({
+        success: false,
+        statusCode: 403,
+        message: "غير مسموح لك بالوصول لبيانات موظف آخر",
+      });
+      return; // لا ترجع Response
+    }
+
+    const employee = await employeeService.getSingleEmployeeService(id);
 
     sendResponse(res, {
       success: true,
@@ -60,6 +111,7 @@ const getSingleEmployeeController = catchAsync(
       result: employee,
       message: "employee get successfully",
     });
+    // لا return هنا أيضاً
   }
 );
 
@@ -79,6 +131,21 @@ const getSingleEmployeeByInviteTokenController = catchAsync(
     });
   }
 );
+
+// get employee language
+const getEmployeeLanguageController = catchAsync(async (req, res) => {
+  console.log("get language called with id:", req.params.id);
+
+  const id = req.params.id;
+  const employeeLanguage = await employeeService.getEmployeeLanguage(id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    result: employeeLanguage,
+    message: "Employee language fetched successfully",
+  });
+});
 
 // get admin and mods
 const getAdminAndModsController = catchAsync(
@@ -111,11 +178,24 @@ const createEmployeeController = catchAsync(
 
 // update controller
 const updateEmployeeController = catchAsync(
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
+    const user = req.user; // مفترض أن الـ auth middleware يضيف بيانات المستخدم هنا
+    const { id } = req.params;
+
+    // لو المستخدم عادي (USER) وليس ADMIN أو MODERATOR
+    if (user?.role === "user" && user?.id !== id) {
+      res.status(403).json({
+        success: false,
+        statusCode: 403,
+        message: "غير مسموح لك بتعديل بيانات موظف آخر",
+      });
+      return;
+    }
+
     const employeeData = req.body;
     const updateData = await employeeService.updateEmployeeService(
       employeeData,
-      req.params.id
+      id
     );
 
     sendResponse(res, {
@@ -230,6 +310,47 @@ const deleteEmployeeController = catchAsync(
   }
 );
 
+const updateEmployeeLanguageController = catchAsync(
+  async (req: Request, res: Response) => {
+    const id = req.params.id;
+    let { language, rtl } = req.body;
+
+    // دعم وصول rtl كـ string
+    if (typeof rtl === "string") {
+      rtl = rtl === "true";
+    }
+
+    // تحقق من القيم
+    if (!language || typeof rtl !== "boolean") {
+      return sendResponse(res, {
+        success: false,
+        message: "language and rtl are required",
+        result: null,
+      });
+    }
+
+    const allowedLanguages = ["ar", "en"];
+    if (!allowedLanguages.includes(language)) {
+      return sendResponse(res, {
+        success: false,
+        message: "Unsupported language",
+        result: null,
+      });
+    }
+
+    const updateEmployee = await employeeService.updateEmployeeLanguage(id, {
+      language,
+      rtl,
+    });
+
+    sendResponse(res, {
+      success: true,
+      message: "Language updated successfully",
+      result: updateEmployee?.employeeLanguage,
+    });
+  }
+);
+
 export const employeeController = {
   getAllEmployeeController,
   getAllEmployeeBasicsController,
@@ -244,4 +365,6 @@ export const employeeController = {
   updateEmployeePersonalityController,
   updateEmployeeRoleController,
   deleteEmployeeController,
+  updateEmployeeLanguageController,
+  getEmployeeLanguageController,
 };

@@ -47,4 +47,6 @@ export type SettingType = {
   payroll: Payroll;
   onboarding_tasks: TaskItem[];
   offboarding_tasks: TaskItem[];
+  rtl: boolean;
+  language: "ar" | "en";
 };

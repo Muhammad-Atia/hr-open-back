@@ -129,6 +129,17 @@ const settingSchema = new mongoose.Schema<SettingType>(
         },
       },
     ],
+    rtl: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    language: {
+      type: String,
+      enum: ["ar", "en"],
+      required: true,
+      default: "en",
+    },
   },
   {
     timestamps: true,

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "yarn build",
+  "buildCommand": "pnpm build",
   "builds": [
     {
       "src": "dist/server.js",

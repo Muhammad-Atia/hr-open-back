@@ -7,7 +7,7 @@ import { calculateRemainingLeave } from "@/lib/leaveHelper";
 import { mailSender } from "@/lib/mailSender";
 import { paginationHelpers } from "@/lib/paginationHelper";
 import { PaginationType } from "@/types";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import httpStatus from "http-status";
 import { Secret } from "jsonwebtoken";
 import mongoose, { PipelineStage } from "mongoose";
@@ -28,6 +28,7 @@ import {
   EmployeeFilterOptions,
   EmployeeType,
 } from "./employee.type";
+import { console } from "inspector";
 
 // get all employees
 const getAllEmployeeService = async (
@@ -212,10 +213,13 @@ const createEmployeeService = async (employeeData: EmployeeCreateType) => {
 
     // employee data
     const createEmployeeData = {
+      name: employeeData.name,
       id: employeeId,
+      work_email: employeeData.work_email,
       personal_email: employeeData.personal_email,
       department: employeeData.department,
       designation: employeeData.designation,
+      password: employeeData.password,
     };
 
     // job data
@@ -320,6 +324,7 @@ const createEmployeeService = async (employeeData: EmployeeCreateType) => {
 
     return insertedEmployee;
   } catch (error) {
+    console.log("Employee data:", employeeData, error);
     await session.abortTransaction();
     session.endSession();
     throw error;
@@ -417,6 +422,24 @@ const updateEmployeeRoleService = async (id: string, role: string) => {
   return result;
 };
 
+// update employee language
+const updateEmployeeLanguage = async (id: any, employeeLanguage: any) => {
+  // employeeLanguage = { employeeId, language, rtl }
+  const result = await Employee.findOneAndUpdate(
+    { id }, // ← استخدم الحقل الصحيح
+    { employeeLanguage: employeeLanguage },
+    { new: true }
+  );
+  return result;
+};
+
+// get employee language
+const getEmployeeLanguage = async (id: any) => {
+  console.log("getEmployeeLanguage called with id:", id);
+  const employee = await Employee.findOne({ id });
+  return employee ? employee.employeeLanguage : null;
+};
+
 // delete employee
 const deleteEmployeeService = async (id: string) => {
   const session = await mongoose.startSession();
@@ -479,5 +502,7 @@ export const employeeService = {
   updateEmployeeCommunicationIdService,
   updateEmployeePersonalityService,
   updateEmployeeRoleService,
+  updateEmployeeLanguage,
   deleteEmployeeService,
+  getEmployeeLanguage,
 };

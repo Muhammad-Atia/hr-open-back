@@ -1,7 +1,7 @@
 import variables from "@/config/variables";
 import { jwtHelpers } from "@/lib/jwtTokenHelper";
 import { mailSender } from "@/lib/mailSender";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { JwtPayload, Secret } from "jsonwebtoken";
 import mongoose from "mongoose";
 import NodeCache from "node-cache";
@@ -11,7 +11,13 @@ import { AuthenticationType } from "./authentication.type";
 
 // password login
 const passwordLoginService = async (email: string, password: string) => {
+  console.log("DB Name:", mongoose.connection.name);
+  const users = await Employee.find({});
+  console.log("كل المستخدمين:", users);
+  console.log("🔍 يبحث عن المستخدم بالإيميل:", email); // <-- أضف هذا
+
   const isUserExist = await Employee.findOne({ work_email: email });
+  console.log("👤 نتيجة البحث:", isUserExist); // <-- وأضف هذا
 
   if (!isUserExist) throw Error("User not found");
 
@@ -64,7 +70,14 @@ const passwordLoginService = async (email: string, password: string) => {
 
 // oauth login
 const oauthLoginService = async (email: string) => {
+  console.log("DB Name:", mongoose.connection.name);
+  const users = await Employee.find({});
+  console.log("كل المستخدمين:", users);
+
+  console.log("🔍 يبحث عن المستخدم بالإيميل:", email); // <-- أضف هذا
+
   const isUserExist = await Employee.findOne({ work_email: email });
+  console.log("👤 نتيجة البحث:", isUserExist); // <-- وأضف هذا
 
   if (!isUserExist) {
     throw new Error("User not found");

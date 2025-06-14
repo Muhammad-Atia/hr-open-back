@@ -18,6 +18,7 @@ export default {
   dos_public_secret_key: process.env.DOS_PUBLIC_SECRET_KEY,
   dos_bucket_name: process.env.DOS_BUCKET_NAME,
   dos_region: process.env.DOS_REGION,
+  dos_end_point: process.env.DOS_ENDPOINT,
   sender_email: process.env.SENDER_EMAIL,
   sender_password: process.env.EMAIL_PASSWORD,
   discord_webhook_url: process.env.DISCORD_WEBHOOK_URL,

@@ -8,6 +8,7 @@ import {
   EmployeeType,
   ERole,
 } from "./employee.type";
+import bcrypt from "bcryptjs";
 
 const employeeSchema = new mongoose.Schema<EmployeeType>(
   {
@@ -30,9 +31,11 @@ const employeeSchema = new mongoose.Schema<EmployeeType>(
     },
     work_email: {
       type: String,
+      unique: true,
     },
     personal_email: {
       type: String,
+      unique: true,
     },
     department: {
       type: String,
@@ -98,12 +101,21 @@ const employeeSchema = new mongoose.Schema<EmployeeType>(
       enum: ERole,
       default: ERole.USER,
     },
+    employeeLanguage: {
+      language: { type: String, enum: ["ar", "en"] },
+      rtl: { type: Boolean },
+    },
   },
   {
     timestamps: true,
   }
 );
-
+// Pre-save hook
+employeeSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
 // index id for faster search
 employeeSchema.index({ id: 1 });
 employeeSchema.index({ role: 1 });

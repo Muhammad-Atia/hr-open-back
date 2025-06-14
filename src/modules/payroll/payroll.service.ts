@@ -10,6 +10,7 @@ import {
   PayrollFilterOptions,
   PayrollType,
 } from "./payroll.type";
+import { ENUM_ROLE } from "@/enums/roles";
 
 // get all data
 const getAllPayrollService = async (
@@ -71,16 +72,32 @@ const getAllPayrollService = async (
 };
 
 // get payroll basic data
-const getPayrollBasicsService = async () => {
-  const result = await Payroll.find(
-    { status: "active" },
-    { _id: 0, employee_id: 1, gross_salary: 1 }
-  );
+type PayrollFilter = {
+  employee_id?: string;
+};
+
+const getPayrollBasicsService = async (filter: PayrollFilter = {}) => {
+  const query: any = { status: "active" };
+
+  if (filter.employee_id) {
+    query.employee_id = filter.employee_id;
+  }
+
+  const result = await Payroll.find(query, {
+    _id: 0,
+    employee_id: 1,
+    gross_salary: 1,
+  });
+
   return result;
 };
 
 // get single data
-const getPayrollService = async (id: string) => {
+const getPayrollService = async (id: string, user) => {
+  // لو المستخدم عادي، لا ترجع إلا بياناته فقط
+  if (user.role === ENUM_ROLE.USER && user.id !== id) {
+    throw new Error("Unauthorized access to payroll data");
+  }
   const result = await Payroll.findOne({ employee_id: id });
   return result;
 };
